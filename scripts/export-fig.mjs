@@ -44,9 +44,22 @@ json('shared/assets/images.json',imageInfo);
 const allWarnings=[];
 function exportNode(root,theme){
  let defs=[],texts=[],hits=[],assets=new Set(),warnings=new Set(),serial=0,rendered=0;
+ // Vibrant label values are blend operands, not standalone foreground colors.
+ // SVG/Flutter exports lack native material compositing. Use semantic labels
+ // in dark appearance, retaining a readable minimum alpha for tertiary text.
+ function paintColor(p,n,modes){
+  const resolved=resolveValue(p.colorVar,modes)||p.color;
+  const variable=map.get(gid(p.colorVar?.value?.alias?.guid));
+  if(theme==='dark'&&n.type==='TEXT'&&variable?.name?.startsWith('Labels - Vibrant/')){
+   const name=variable.name.replace('Labels - Vibrant/','Labels/');
+   const semantic=activeVariables.find(v=>v.name===name&&gid(v.variableSetID?.guid)===gid(variable.variableSetID?.guid));
+   if(semantic){const c=resolveValue({value:{alias:{guid:semantic.guid}}},modes);if(c){warnings.add('vibrant-label-semantic-fallback');return {...c,a:Math.max(c.a??1,0.6)};}}
+  }
+  return resolved;
+ }
  const key=()=>`s${++serial}`;
  const usePath=(i)=>{const d=blobPath(i);if(!d)return '';const k=`p${i}`;if(!defs.some(x=>x.startsWith(`<path id="${k}" `)))defs.push(`<path id="${k}" d="${d}"/>`);return k;};
- function paints(paints,n,modes,geometry){let s='',solidBase=null;for(const original of paints||[]){if(original.visible===false)continue;let p=original;let c=resolveValue(p.colorVar,modes)||p.color;
+ function paints(paints,n,modes,geometry){let s='',solidBase=null;for(const original of paints||[]){if(original.visible===false)continue;let p=original;let c=paintColor(p,n,modes);
  if(p.blendMode==='LINEAR_DODGE'&&solidBase){
   const add=over=>({r:Math.min(1,solidBase.r+over.r*(over.a??1)*(p.opacity??1)),g:Math.min(1,solidBase.g+over.g*(over.a??1)*(p.opacity??1)),b:Math.min(1,solidBase.b+over.b*(over.a??1)*(p.opacity??1)),a:1});
   if(p.type==='SOLID'){c=add(c);p={...p,opacity:1};}
@@ -95,7 +108,7 @@ function exportNode(root,theme){
   function geo(refs,stroke=false){return (fill,opacity)=>{if(refs?.length)return refs.map(g=>{const k=usePath(g.commandsBlob);return k?`<use href="#${k}" fill="${fill}" fill-opacity="${num(opacity)}" fill-rule="${g.windingRule==='ODD'?'evenodd':'nonzero'}"/>`:'';}).join('');const r=num(n.cornerRadius||0);if(n.type==='ELLIPSE')return `<ellipse cx="${num(w/2)}" cy="${num(h/2)}" rx="${num(w/2)}" ry="${num(h/2)}" fill="${fill}" fill-opacity="${num(opacity)}"/>`;return `<rect width="${num(w)}" height="${num(h)}" rx="${r}" ${stroke?`fill="none" stroke="${fill}" stroke-width="${num(n.strokeWeight||1)}" stroke-opacity`:`fill="${fill}" fill-opacity`}="${num(opacity)}"/>`;};}
   if(n.type==='TEXT'){
    const glyphs=n.derivedTextData?.glyphs||[];const txt=n.textData?.characters||'';
-   const col=resolveValue(n.fillPaints?.[0]?.colorVar,modes)||n.fillPaints?.[0]?.color;
+   const col=n.fillPaints?.[0]?paintColor(n.fillPaints[0],n,modes):undefined;
    const textId=`t${texts.length}`;
    texts.push({key:textId,id:route,name:n.name,text:txt,x:num(absolute[4]),y:num(absolute[5]),width:num(w),height:num(h),fontSize:n.fontSize||17,fontFamily:n.fontName?.family||'sans-serif',fontWeight:n.derivedTextData?.fontMetaData?.[0]?.fontWeight||400,lineHeight:n.lineHeight?.units==='PIXELS'?n.lineHeight.value:(n.fontSize||17)*1.2,color:color(col),opacity:col?.a??1,align:n.textAlignHorizontal||'LEFT',matrix:absolute.map(num)});
    own=paints(n.fillPaints,n,modes,(fill,opacity)=>glyphs.map(g=>{const k=usePath(g.commandsBlob);return k?`<use href="#${k}" transform="translate(${num(g.position?.x)} ${num(g.position?.y)}) scale(${num(g.fontSize||n.fontSize||17)} ${-num(g.fontSize||n.fontSize||17)})" fill="${fill}" fill-opacity="${num(opacity)}"/>`:'';}).join(''));

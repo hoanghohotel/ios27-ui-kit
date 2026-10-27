@@ -1,5 +1,9 @@
 # Kết quả kiểm tra — 2026-10-27
 
+## Chữ trên nền tối
+
+Sửa 374 component có nhãn `Labels - Vibrant/*`: trong Dark, dùng màu Labels tương ứng với alpha tối thiểu 0.6 thay cho toán hạng màu Vibrant không có compositing native. Áp dụng cùng màu cho glyph SVG và metadata của chữ thay thế, nên React và Flutter nhận cùng dữ liệu. Đây là fallback cho khả năng đọc, không mô phỏng đầy đủ vibrancy của Figma. So sánh với commit trước xác nhận không thay đổi scene Light nào. `scripts/test-dark-labels.mjs` kiểm tra tiêu đề Menus đạt tương phản tối thiểu 4.5:1 trên nền preview #202126 và kiểm tra glyph thực sự được render sáng.
+
 ## Sửa bộ xuất từ file cục bộ
 
 - Đưa bộ xuất vào `scripts/export-fig.mjs`; chạy với đường dẫn `.fig` làm tham số, sau đó `npm run setup`.
