@@ -1,0 +1,36 @@
+name: Storybook and Chromatic
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Build Storybook
+        run: npm run build-storybook
+      - name: Upload Storybook build
+        uses: actions/upload-artifact@v4
+        with:
+          name: storybook-static
+          path: storybook-static
+          retention-days: 7
+      - name: Run Chromatic
+        if: env.CHROMATIC_PROJECT_TOKEN != ''
+        run: npx chromatic --storybook-build-dir=storybook-static --config-file=chromatic.ci.json
+      - name: Explain missing token
+        if: env.CHROMATIC_PROJECT_TOKEN == ''
+        run: echo 'Storybook built successfully. Add CHROMATIC_PROJECT_TOKEN repository secret to enable cloud snapshots.' >> "$GITHUB_STEP_SUMMARY"

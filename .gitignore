@@ -16,3 +16,9 @@ Thumbs.db
 *.zip
 apps/showcase/public/ios27/
 packages/flutter/assets/
+
+storybook-static/
+stories/generated/
+chromatic.log
+build-storybook.log
+

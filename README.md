@@ -91,7 +91,11 @@ flutter run -d chrome
 
 Mã demo đã có sẵn; giữ lại `lib/main.dart` và dependency local `ios27_kit` nếu công cụ tạo dự án hỏi ghi đè. Bản này đã kiểm tra với Flutter 3.47.7 / Dart 3.13.5; chưa xác minh các SDK cũ hơn.
 
-## Cấu trúc
+## Storybook và kiểm tra hình ảnh
+
+Chạy `npm run storybook` để duyệt component tại cổng 6006; `npm run build-storybook` để build tĩnh; `npm run chromatic` để chạy kiểm tra cloud khi đã đặt `CHROMATIC_PROJECT_TOKEN`. Xem [hướng dẫn Storybook/Chromatic](docs/STORYBOOK.md) về phạm vi chụp ảnh và thiết lập GitHub Actions.
+
+## Cấu trúc thư mục
 
 - `packages/react`: thư viện TypeScript và CSS.
 - `packages/flutter`: thư viện Dart, tài nguyên và ví dụ.

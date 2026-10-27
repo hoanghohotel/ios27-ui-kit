@@ -1,14 +1,31 @@
 {
   "name": "ios27-ui-kit-workspace",
   "private": true,
-  "workspaces": ["packages/react", "apps/showcase"],
+  "workspaces": [
+    "packages/react",
+    "apps/showcase"
+  ],
   "scripts": {
     "setup": "node scripts/generate-bindings.mjs && npm run prepare:assets && npm run build:library",
     "prepare:assets": "node scripts/prepare-assets.mjs",
     "build:library": "npm run build -w @local/ios27-react",
     "build": "npm run prepare:assets && npm run build:library && npm run build -w ios27-showcase",
     "dev": "npm run prepare:assets && npm run dev -w ios27-showcase",
-    "typecheck": "tsc --noEmit -p packages/react/tsconfig.json && tsc --noEmit -p apps/showcase/tsconfig.json"
+    "typecheck": "tsc --noEmit -p packages/react/tsconfig.json && tsc --noEmit -p apps/showcase/tsconfig.json",
+    "prepare:storybook": "node scripts/prepare-assets.mjs && node scripts/generate-stories.mjs",
+    "storybook": "npm run prepare:storybook && storybook dev -p 6006 --host 127.0.0.1 --no-open",
+    "build-storybook": "npm run prepare:storybook && storybook build",
+    "chromatic": "chromatic"
   },
-  "devDependencies": {"typescript": "^5.9.3", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/node": "^24.0.0"}
+  "devDependencies": {
+    "@storybook/addon-docs": "^10.6.4",
+    "@storybook/react-vite": "^10.6.4",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "chromatic": "^18.13.3",
+    "storybook": "^10.6.4",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5"
+  }
 }
