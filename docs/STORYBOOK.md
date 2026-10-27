@@ -1,5 +1,15 @@
 # Storybook và Chromatic
 
+## Build thử ngày 2026-10-27
+
+- Build Storybook cục bộ và kiểm tra TypeScript: thành công.
+- GitHub Actions: build và lưu artifact thành công; bước Chromatic được bỏ qua do chưa có repository secret.
+- Chromatic build 1: thành công, nhận 3.027 story thuộc 37 mục, chụp 11 snapshot. Đây là baseline đầu tiên được dịch vụ tự chấp nhận, không chứng minh toàn bộ thiết kế khớp Figma.
+- [Xem Storybook đã xuất bản](https://6ae01d8be55240a0d88b85ab-qqkxxskgua.chromatic.com/).
+- [GitHub Actions đã chạy thành công](https://github.com/hoanghohotel/ios27-ui-kit/actions/runs/40445934382).
+
+Token đã được dùng qua biến môi trường cho lượt chạy thử, không lưu trong repository. Cần thêm GitHub Actions secret để các lượt push sau tự chạy Chromatic.
+
 ## Chạy trên máy
 
 ```sh

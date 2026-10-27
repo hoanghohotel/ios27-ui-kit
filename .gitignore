@@ -21,4 +21,3 @@ storybook-static/
 stories/generated/
 chromatic.log
 build-storybook.log
-
