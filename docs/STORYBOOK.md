@@ -1,5 +1,11 @@
 # Storybook và Chromatic
 
+## Duyệt thư viện
+
+Mở **Library → Overview → Browse collections** để xem 36 collection dạng bảng. Mỗi collection có trang Overview riêng với nhóm family, tìm kiếm, preview Light/Dark cạnh nhau và kích thước gốc. Mặc định hiển thị 24 biến thể; nút Show more tải thêm 24. Preview tự thu nhỏ để vừa ô; Product Bezels giữ tỷ lệ và có ô cao hơn. Trên điện thoại, hai appearance xếp dọc.
+
+Các story **Design** vẫn giữ nguyên ID và phục vụ snapshot từng biến thể. 37 trang tổng quan mới không bật snapshot để tránh kiểm tra trùng toàn bộ catalogue; các snapshot thiết kế hiện có vẫn được bật. Storybook hiện có 3.064 story tổng cộng.
+
 ## Build thử ngày 2026-10-27
 
 - Build Storybook cục bộ và kiểm tra TypeScript: thành công.
