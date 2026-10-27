@@ -3,10 +3,11 @@ import path from 'node:path';
 import sharp from 'sharp';
 const root=path.resolve(import.meta.dirname,'..');
 const cat=JSON.parse(fs.readFileSync(path.join(root,'shared/catalogue.json')));
+const layoutAssets=fs.readdirSync(path.join(root,'shared/assets/components')).filter(f=>f.startsWith('layout-')).map(f=>JSON.parse(fs.readFileSync(path.join(root,'shared/assets/components',f))));
 const images=JSON.parse(fs.readFileSync(path.join(root,'shared/assets/images.json')));
 const refs=new Map();
 sharp.concurrency(1);
-const jobs=cat.flatMap(e=>['light','dark'].map(theme=>({e,theme})));
+const jobs=[...cat,...layoutAssets].flatMap(e=>['light','dark'].map(theme=>({e,theme})));
 let next=0,passed=0;const failures=[];
 async function worker(){while(next<jobs.length){const {e,theme}=jobs[next++];try{
   const scene=JSON.parse(fs.readFileSync(path.join(root,'shared/assets/components',e.file)))[theme];

@@ -9,6 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_svg: ^2.3.0
+  path_drawing: ^1.0.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -18,4 +19,5 @@ flutter:
     - assets/tokens.json
     - assets/images.json
     - assets/components/
+    - assets/layouts/
     - assets/images/

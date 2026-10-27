@@ -3,6 +3,7 @@ const root=path.resolve(import.meta.dirname,'..');
 const dest=path.join(root,'apps/showcase/public/ios27');
 fs.mkdirSync(dest,{recursive:true});
 fs.cpSync(path.join(root,'shared/assets/components'),path.join(dest,'components'),{recursive:true});
+fs.cpSync(path.join(root,'shared/assets/layouts'),path.join(dest,'layouts'),{recursive:true});
 const images=JSON.parse(fs.readFileSync(path.join(root,'shared/assets/images.json'),'utf8'));
 fs.mkdirSync(path.join(dest,'images'),{recursive:true});
 for(const [hash,info]of Object.entries(images))fs.copyFileSync(path.join(root,'shared/assets',info.file),path.join(dest,'images',hash));

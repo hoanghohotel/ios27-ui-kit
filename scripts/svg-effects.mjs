@@ -1,11 +1,11 @@
 // Compose Figma shadows in list order. Use SourceAlpha for each shadow so
 // one effect does not change the silhouette used by subsequent effects.
-export function svgEffects(effects, width, height, id) {
+export function svgEffects(effects, width, height, id, {neutralSource=false}={}) {
   const active=effects.filter(e=>e.visible!==false && ['DROP_SHADOW','INNER_SHADOW','FOREGROUND_BLUR'].includes(e.type));
   if(!active.length)return '';
   const n=x=>Number.isFinite(x)?Math.round(x*100000)/100000:0;
   const color=c=>'#'+['r','g','b'].map(k=>Math.round(Math.max(0,Math.min(1,c?.[k]??0))*255).toString(16).padStart(2,'0')).join('');
-  let body='',current='SourceGraphic',serial=0;
+  let body=neutralSource?'<feFlood flood-opacity="0" result="empty"/>':'',current=neutralSource?'empty':'SourceGraphic',serial=0;
   // Outer shadows are inserted behind the current image (front-to-back).
   // Inset shadows are inserted above it (back-to-front); blur applies last.
   const ordered=[...active.filter(e=>e.type==='DROP_SHADOW'),...active.filter(e=>e.type==='INNER_SHADOW').reverse(),...active.filter(e=>e.type==='FOREGROUND_BLUR')];

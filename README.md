@@ -93,6 +93,10 @@ Mã demo đã có sẵn; giữ lại `lib/main.dart` và dependency local `ios27
 
 ## Storybook và kiểm tra hình ảnh
 
+8 nhóm Segmented Controls, Activity Views, Face ID, Layout Guides, Popovers, Tab Bars, Toggles và Windows mở mặc định ở **Figma layout**. Bố cục giữ vị trí, kích thước, tiêu đề và các ví dụ Light/Dark từ file `.fig`, được ghép từ 147 component và 49 instance có nội dung tùy chỉnh. Chuyển sang **Variants** để tìm từng mẫu, hoặc chọn Zoom 100% để xem kích thước gốc.
+
+Dùng lại cả trang trong React: `<FigmaPage page="Toggles" />` bên trong `KitProvider`. Trong Flutter: `KitFigmaPage(page: 'Toggles')` trong vùng có kích thước giới hạn. Hai cách đều dùng lại `KitComponent`, không dùng ảnh chụp toàn trang.
+
 Chạy `npm run storybook` để duyệt component tại cổng 6006; `npm run build-storybook` để build tĩnh; `npm run chromatic` để chạy kiểm tra cloud khi đã đặt `CHROMATIC_PROJECT_TOKEN`. Xem [hướng dẫn Storybook/Chromatic](docs/STORYBOOK.md) về phạm vi chụp ảnh và thiết lập GitHub Actions.
 
 ## Cấu trúc thư mục
@@ -106,7 +110,7 @@ Chạy `npm run storybook` để duyệt component tại cổng 6006; `npm run b
 
 ## Giới hạn hình ảnh và quyền sử dụng
 
-591 biến thể có cảnh báo hiệu ứng trong `shared/extraction-report.json`: khúc xạ kính, blur nền, inner shadow hoặc khác biệt SVG filter/gradient. Flutter loại bỏ SVG filter không được hỗ trợ. Không cam kết khớp từng pixel cho toàn bộ kit; cần kiểm tra các component được chọn trước khi tích hợp sản phẩm. Control native là bản triển khai tương tác theo phong cách nguồn, không phải mô phỏng hoàn toàn iOS.
+Các giới hạn hiệu ứng được ghi theo từng biến thể trong `shared/extraction-report.json`: khúc xạ kính, blur nền, màu vibrant thay thế và khác biệt SVG filter/gradient. Flutter loại bỏ SVG filter không được hỗ trợ. Bố cục gốc và lỗi xếp lớp/mask/biến thể đã được kiểm tra riêng; kết quả render thành công không chứng minh khớp từng pixel với Figma. Control native là bản triển khai tương tác theo phong cách nguồn, không phải mô phỏng hoàn toàn iOS.
 
 Chữ nguồn thường giữ dưới dạng vector. Chữ thay thế dùng font có trên thiết bị; bộ mã không phân phối font Apple. Typography và tokens được giữ dưới dạng dữ liệu để bạn tích hợp với theme riêng.
 

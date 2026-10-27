@@ -1,8 +1,8 @@
 'use client';
 import {createContext, useContext, useEffect, useId, useMemo, useState, type CSSProperties, type ReactNode} from 'react';
-import {catalogue, findVariant, type ComponentData, type ThemeMode} from './catalog';
+import {catalogue, findVariant, type CatalogueEntry, type ComponentData, type ThemeMode} from './catalog';
 
-const KitContext=createContext({theme:'light' as ThemeMode,assetBase:'/ios27'});
+export const KitContext=createContext({theme:'light' as ThemeMode,assetBase:'/ios27'});
 export function KitProvider({children,theme='light',assetBase='/ios27'}:{children:ReactNode;theme?:ThemeMode;assetBase?:string}) {
  return <KitContext.Provider value={{theme,assetBase}}><div className="ios27" data-theme={theme}>{children}</div></KitContext.Provider>;
 }
@@ -11,15 +11,16 @@ export interface KitComponentProps {
  width?:number; scale?:number; texts?:Record<string,string>; actions?:Record<string,()=>void>;
  onPress?:()=>void; label?:string; className?:string; style?:CSSProperties; data?:ComponentData;
  onLoad?:(data:ComponentData)=>void;
+ entry?:CatalogueEntry;
 }
 const cache=new Map<string,Promise<ComponentData>>();
 function load(url:string){let p=cache.get(url);if(!p){p=fetch(url).then(r=>{if(!r.ok)throw new Error(`Component could not load (${r.status})`);return r.json() as Promise<ComponentData>}).catch(e=>{cache.delete(url);throw e});cache.set(url,p);}return p;}
 const escapeReg=(s:string)=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-export function KitComponent({id,group,page,variant,theme,width,scale=1,texts={},actions={},onPress,label,className='',style,data:provided,onLoad}:KitComponentProps){
+export function KitComponent({id,group,page,variant,theme,width,scale=1,texts={},actions={},onPress,label,className='',style,data:provided,onLoad,entry:suppliedEntry}:KitComponentProps){
  const context=useContext(KitContext);const mode=theme??context.theme;const prefix=useId().replace(/[^a-zA-Z0-9]/g,'');
- const entry=provided??(id?catalogue.find(c=>c.id===id):group?findVariant(group,variant,page):undefined);
+ const entry=provided??suppliedEntry??(id?catalogue.find(c=>c.id===id):group?findVariant(group,variant,page):undefined);
  const [loaded,setLoaded]=useState<{url:string;data:ComponentData}|null>(null);const [error,setError]=useState('');
- const url=entry?`${context.assetBase}/components/${entry.file}`:'';
+ const url=entry?`${context.assetBase}/components/${entry.file}${entry.revision?`?v=${entry.revision}`:''}`:'';
  useEffect(()=>{if(provided||!url)return;let active=true;setError('');load(url).then(data=>{if(active)setLoaded({url,data})}).catch(e=>{if(active)setError(String(e))});return ()=>{active=false}},[url,provided]);
  const data=provided??(loaded?.url===url?loaded.data:undefined);
  useEffect(()=>{if(data)onLoad?.(data)},[data,onLoad]);

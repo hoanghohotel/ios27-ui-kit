@@ -1,6 +1,7 @@
 import React, {useEffect,useRef,useState} from 'react';
 import {catalogue, type CatalogueEntry} from '../packages/react/src/catalog';
 import {KitComponent, KitProvider} from '../packages/react/src/KitComponent';
+import {FigmaPage,figmaPages} from '../packages/react/src/FigmaPage';
 import './library.css';
 
 const priority=['Buttons','Toggles','Text Fields','Segmented Controls','Sliders','Steppers','Alerts','Menus','Lists','Tab Bars','Product Bezels','Widgets'];
@@ -12,6 +13,8 @@ const slug=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$
 const link=(page?:string)=>`./?path=/story/${page?'library-'+slug(page)+'--overview':'library-overview--welcome'}`;
 
 function Sample({entry,theme,compact=false}:{entry:CatalogueEntry;theme:'light'|'dark';compact?:boolean}){
+  const appearanceKey=Object.keys(entry.properties).find(k=>['light','dark'].includes(entry.properties[k].toLowerCase()));
+  if(appearanceKey)entry=catalogue.find(c=>c.page===entry.page&&c.group===entry.group&&c.properties[appearanceKey]?.toLowerCase()===theme&&Object.entries(entry.properties).every(([k,v])=>k===appearanceKey||c.properties[k]===v))??entry;
   const host=useRef<HTMLDivElement>(null);
   const [available,setAvailable]=useState(compact?138:220);
   useEffect(()=>{const element=host.current;if(!element)return;const observer=new ResizeObserver(([box])=>setAvailable(Math.max(1,box.contentRect.width-24)));observer.observe(element);return ()=>observer.disconnect();},[]);
@@ -39,7 +42,7 @@ export function LibraryHome(){
   </main>;
 }
 
-export function CollectionBoard({page}:{page:string}){
+function VariantBoard({page}:{page:string}){
   const [query,setQuery]=useState(''),[group,setGroup]=useState(''),[limit,setLimit]=useState(24);
   const entries=catalogue.filter(e=>e.page===page);
   const groups=[...new Set(entries.map(e=>e.group))];
@@ -55,4 +58,14 @@ export function CollectionBoard({page}:{page:string}){
     {limit<filtered.length&&<div className="library-more"><button onClick={()=>setLimit(n=>n+24)}>Show more variants <span>↓</span></button></div>}
     <footer className="library-footer">{page} · Light & Dark · {entries.length} variants</footer>
   </main>;
+}
+
+export function CollectionBoard({page}:{page:string}){
+ const hasLayout=figmaPages.some(p=>p.name===page);
+ const [view,setView]=useState<'layout'|'variants'>(hasLayout?'layout':'variants');
+ if(!hasLayout)return <VariantBoard page={page}/>;
+ return <>
+  <nav className="library-view-switch" aria-label="Collection view"><a href={link()} target="_top">← All collections</a><div><button type="button" aria-pressed={view==='layout'} onClick={()=>setView('layout')}>Figma layout</button><button type="button" aria-pressed={view==='variants'} onClick={()=>setView('variants')}>Variants</button></div><span>{page}</span></nav>
+  {view==='layout'?<FigmaPage page={page}/>:<VariantBoard page={page}/>}
+ </>;
 }

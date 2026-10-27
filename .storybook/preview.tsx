@@ -5,7 +5,7 @@ import '../packages/react/src/styles.css';
 const preview: Preview = {
   globalTypes: {theme: {description: 'Appearance', toolbar: {icon: 'circlehollow', items: ['light', 'dark']}}},
   initialGlobals: {theme: 'light'},
-  parameters: {layout: 'centered', chromatic: {pauseAnimationAtEnd: true}, options:{storySort:{order:['Library',['Overview','*'],'Native','Design']}}},
+  parameters: {layout: 'centered', chromatic: {pauseAnimationAtEnd: true}, options:{storySort:{order:['Library',['Overview','*'],'Figma Pages','Native','Design']}}},
   decorators: [(Story, context) => {
     if(context.parameters.libraryBoard)return <Story/>;
     const theme = context.globals.theme === 'dark' ? 'dark' : 'light';

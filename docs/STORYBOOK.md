@@ -4,9 +4,11 @@
 
 Mở **Library → Overview → Browse collections** để xem 36 collection dạng bảng. Mỗi collection có trang Overview riêng với nhóm family, tìm kiếm, preview Light/Dark cạnh nhau và kích thước gốc. Mặc định hiển thị 24 biến thể; nút Show more tải thêm 24. Preview tự thu nhỏ để vừa ô; Product Bezels giữ tỷ lệ và có ô cao hơn. Trên điện thoại, hai appearance xếp dọc.
 
-Các story **Design** vẫn giữ nguyên ID và phục vụ snapshot từng biến thể. 37 trang tổng quan mới không bật snapshot để tránh kiểm tra trùng toàn bộ catalogue; các snapshot thiết kế hiện có vẫn được bật. Storybook hiện có 3.064 story tổng cộng.
+Các story **Design** vẫn giữ nguyên ID và phục vụ snapshot từng biến thể. 37 trang tổng quan mới không bật snapshot để tránh kiểm tra trùng toàn bộ catalogue; các snapshot thiết kế hiện có vẫn được bật. Storybook hiện có 3.072 story tổng cộng, gồm 8 story tái dựng trang gốc trong mục **Figma Pages**. Các trang này bật snapshot và chờ tải đầy đủ component/ảnh trước khi chụp.
 
-## Build thử ngày 2026-10-27
+8 collection được sửa mở mặc định ở **Figma layout** và có nút **Variants**. Xem [phạm vi tái dựng và kiểm tra](FIGMA-PAGES.md).
+
+## Lịch sử build ban đầu ngày 2026-10-27
 
 - Build Storybook cục bộ và kiểm tra TypeScript: thành công.
 - GitHub Actions: build và lưu artifact thành công; bước Chromatic được bỏ qua do chưa có repository secret.
@@ -35,7 +37,7 @@ Storybook dùng React + Vite để kiểm tra thư viện React độc lập v�
 npx chromatic --storybook-build-dir=storybook-static --config-file=chromatic.ci.json
 ```
 
-Mặc định chụp toàn bộ 3.027 story: 5 control native và 1.511 component × 2 theme. Các story catalogue đặt `chromatic.disableSnapshot: false` và dùng kích thước gốc, không thu nhỏ về 420px. Mỗi lượt chạy đầy đủ sử dụng hạn mức snapshot tương ứng của tài khoản. Baseline cũ chỉ có 11 story nên lần đầu sau thay đổi này sẽ có nhiều story mới, không có nghĩa chúng đã được xác minh với Figma.
+Mặc định chụp 3.035 story: 5 control native, 1.511 component × 2 theme và 8 trang Figma ghép từ component. Các story catalogue đặt `chromatic.disableSnapshot: false` và dùng kích thước gốc, không thu nhỏ về 420px. Mỗi lượt chạy đầy đủ sử dụng hạn mức snapshot tương ứng của tài khoản. Baseline cũ chỉ có 11 story nên lần đầu sau thay đổi này sẽ có nhiều story mới, không có nghĩa chúng đã được xác minh với Figma.
 
 Lượt đầu tạo baseline, cần duyệt hình ảnh trước khi xem đó là bản chuẩn. `exitZeroOnChanges` cho phép build hoàn tất khi có khác biệt hình ảnh; lỗi build/runtime vẫn phải sửa. Không bật tự động chấp nhận thay đổi.
 

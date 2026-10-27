@@ -1,6 +1,6 @@
 import data from './catalogue.json';
 export type ThemeMode = 'light' | 'dark';
-export interface CatalogueEntry { id:string; page:string; group:string; name:string; properties:Record<string,string>; width:number; height:number; file:string; warnings:string[]; textCount:number }
+export interface CatalogueEntry { id:string; page:string; group:string; name:string; properties:Record<string,string>; width:number; height:number; file:string; revision?:string; warnings:string[]; textCount:number }
 export const catalogue = data as CatalogueEntry[];
 export function findVariant(group:string, properties:Record<string,string|boolean> = {}, page?:string):CatalogueEntry {
   const candidates=catalogue.filter(c=>c.group===group && (!page || c.page===page));

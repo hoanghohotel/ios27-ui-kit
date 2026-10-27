@@ -21,3 +21,7 @@ storybook-static/
 stories/generated/
 chromatic.log
 build-storybook.log
+export-fig.log
+setup.log
+render-audit.log
+next-build.log

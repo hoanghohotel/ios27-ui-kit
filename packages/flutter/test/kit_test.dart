@@ -4,6 +4,24 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ios27_kit/ios27_kit.dart';
 
 void main() {
+  testWidgets('source page composes components and masked tab assets parse', (tester) async {
+    await tester.runAsync(() async {
+      await tester.pumpWidget(const MaterialApp(home: Scaffold(body: Column(children: [
+        Expanded(child: KitFigmaPage(page: 'Face ID')),
+        KitComponent(id: '3:72207', brightness: Brightness.dark),
+      ]))));
+      for (var attempt = 0; attempt < 40; attempt++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        await tester.pump();
+        if (find.byType(SvgPicture).evaluate().length >= 5) break;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      await tester.pump();
+    });
+    expect(find.byType(KitComponent), findsNWidgets(5));
+    expect(find.byType(SvgPicture), findsNWidgets(5));
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('native button invokes callback and disabled button does not', (tester) async {
     var count = 0;
     await tester.pumpWidget(MaterialApp(home: Scaffold(body: Column(children: [

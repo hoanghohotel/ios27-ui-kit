@@ -1,6 +1,6 @@
 {
-  "scenes": 3022,
-  "passed": 3022,
+  "scenes": 3228,
+  "passed": 3228,
   "failures": [],
   "renderer": "sharp/librsvg",
   "thumbnailTarget": 160,

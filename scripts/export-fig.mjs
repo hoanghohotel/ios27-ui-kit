@@ -3,6 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import {parseFig,getBlobBytes,resolveGradientGeometry} from 'openfig-core';
 import {svgEffects} from './svg-effects.mjs';
+import {sortLayers,paintOpacity,resolveInstanceMaster,counterpartIds,variantProperties} from './fig-semantics.mjs';
+import {exportLayouts} from './export-layouts.mjs';
 
 const source=process.argv[2];
 if(!source)throw new Error('Usage: node scripts/export-fig.mjs source.fig [output-directory]');
@@ -10,6 +12,7 @@ const out=path.resolve(process.argv[3] || path.join(import.meta.dirname,'..'));
 const doc=parseFig(new Uint8Array(fs.readFileSync(source)));
 const gid=g=>g?`${g.sessionID}:${g.localID}`:'';
 const map=doc.nodeMap, kids=doc.childrenMap;
+for(const [id,children] of kids)kids.set(id,sortLayers(children));
 const write=(f,s)=>{fs.mkdirSync(path.dirname(path.join(out,f)),{recursive:true});fs.writeFileSync(path.join(out,f),s);};
 const json=(f,s)=>write(f,JSON.stringify(s));
 const pageOf=n=>n?.type==='CANVAS'?n:n?.parentIndex?pageOf(map.get(gid(n.parentIndex.guid))):null;
@@ -42,7 +45,7 @@ const imageInfo={};
 for(const [hash,bytes]of doc.images){let mime=bytes[0]===137?'image/png':bytes[0]===255?'image/jpeg':String.fromCharCode(...bytes.slice(0,4))==='RIFF'?'image/webp':'application/octet-stream';let ext=mime.split('/')[1];imageInfo[hash]={mime,file:`images/${hash}.${ext}`,bytes:bytes.length};write(`shared/assets/${imageInfo[hash].file}`,bytes);}
 json('shared/assets/images.json',imageInfo);
 const allWarnings=[];
-function exportNode(root,theme){
+function exportNode(root,theme,{shallow=false,modes:initialModes}={}){
  let defs=[],texts=[],hits=[],assets=new Set(),warnings=new Set(),serial=0,rendered=0;
  // Vibrant label values are blend operands, not standalone foreground colors.
  // SVG/Flutter exports lack native material compositing. Use semantic labels
@@ -58,6 +61,19 @@ function exportNode(root,theme){
   return resolved;
  }
  const key=()=>`s${++serial}`;
+ const propRefs=n=>[...(n.componentPropRefs??[]),...(n.parameterConsumptionMap?.entries??[]).filter(e=>e.variableData?.value?.propRefValue).map(e=>({defID:e.variableData.value.propRefValue.defId,componentPropNodeField:e.variableField}))];
+ const overridden=(raw,contexts)=>{
+  let n={...raw};const id=gid(n.guid);
+  // Outer instance overrides take precedence over nested master defaults.
+  for(const ctx of [...contexts].reverse()){const o=ctx.entries.get([...ctx.prefix,id].join('/'));if(o)n={...n,...o};}
+  for(const ref of propRefs(n))for(const ctx of [...contexts].reverse()){
+   const value=ctx.props?.get(gid(ref.defID));
+   if(value!==undefined&&ref.componentPropNodeField==='TEXT_DATA')n.textData=value;
+   if(value!==undefined&&ref.componentPropNodeField==='VISIBLE')n.visible=value;
+   if(value!==undefined&&ref.componentPropNodeField==='OVERRIDDEN_SYMBOL_ID')n.overriddenSymbolID=value;
+  }
+  return n;
+ };
  const usePath=(i)=>{const d=blobPath(i);if(!d)return '';const k=`p${i}`;if(!defs.some(x=>x.startsWith(`<path id="${k}" `)))defs.push(`<path id="${k}" d="${d}"/>`);return k;};
  function paints(paints,n,modes,geometry){let s='',solidBase=null;for(const original of paints||[]){if(original.visible===false)continue;let p=original;let c=paintColor(p,n,modes);
  if(p.blendMode==='LINEAR_DODGE'&&solidBase){
@@ -65,7 +81,7 @@ function exportNode(root,theme){
   if(p.type==='SOLID'){c=add(c);p={...p,opacity:1};}
   else if(p.type?.startsWith('GRADIENT')){const stops=(p.stops||[]).map(stop=>({position:stop.position,color:add(resolveValue(stop.colorVar,modes)||stop.color)}));p={...p,stops,opacity:1};}
  }
- let fill=color(c);let op=(p.opacity??1)*(c?.a??1);
+ let fill=color(c);let op=paintOpacity(p,c);
  solidBase=p.type==='SOLID'&&op===1?c:null;
  if(p.type==='IMAGE'){
   const raw=p.image?.hash;const hash=typeof raw==='string'?raw:raw?Buffer.from(raw instanceof Uint8Array?raw:Object.values(raw)).toString('hex'):'';
@@ -86,22 +102,38 @@ function exportNode(root,theme){
  }return s;}
  function visit(raw,contexts=[],world=identity,modes=baseModes(theme),depth=0,rootNode=false,route=''){
   if(depth>48){warnings.add('recursion-limit');return '';}
-  let n={...raw};const id=gid(n.guid);
-  for(const ctx of contexts){const o=ctx.entries.get([...ctx.prefix,id].join('/'));if(o)n={...n,...o};}
+  let n=overridden(raw,contexts);const id=gid(n.guid);
   if(n.visible===false||n.opacity===0)return '';
   const inherited={...modes};for(const e of n.variableModeBySetMap?.entries||[])inherited[gid(e.variableSetID?.guid)]=gid(e.variableModeID);
   modes=inherited;
   if(n.type==='INSTANCE'){
-   const master=map.get(gid(n.symbolData?.symbolID));if(!master){warnings.add('missing-master:'+gid(n.symbolData?.symbolID));return '';}
+   const {original,master}=resolveInstanceMaster(n,map,kids,resolveValue,modes);if(!master){warnings.add('missing-master:'+gid(n.symbolData?.symbolID));return '';}
+   const switched=original&&master!==original;
+   const remap=switched?counterpartIds(original,master,kids):new Map();
+   const propRemap=new Map();
+   for(const [a,b] of remap)for(const ref of propRefs(map.get(a))){const peer=propRefs(map.get(b)).find(r=>r.componentPropNodeField===ref.componentPropNodeField);if(peer)propRemap.set(gid(ref.defID),gid(peer.defID));}
+   const remapProps=props=>new Map([...(props??[])].map(([k,v])=>[propRemap.get(k)||k,v]));
+   const remapKey=k=>k.split('/').map(id=>remap.get(id)||id).join('/');
    const entries=new Map();for(const o of [...(n.derivedSymbolData||[]),...(n.symbolData?.symbolOverrides||[])]){const k=o.guidPath?.guids?.map(gid).join('/');if(k)entries.set(k,{...entries.get(k),...o});}
+   if(switched){for(const [k,o]of [...entries]){entries.delete(k);entries.set(remapKey(k),o);}for(const field of ['fillPaints','strokePaints','effects','variableModeBySetMap'])delete n[field];}
    const masterOverride=entries.get(gid(master.guid))||{};entries.delete(gid(master.guid));
-   const actual={...master,...masterOverride,...n,type:'RESOLVED_INSTANCE'};
-   const nested=contexts.map(c=>({...c,prefix:[...c.prefix,id]}));nested.push({entries,prefix:[]});
+   const actual={...master,...masterOverride,...n,type:'RESOLVED_INSTANCE',resolvedMaster:master};
+   const props=new Map((n.componentPropAssignments??[]).map(a=>[gid(a.defID),resolveValue(a.varValue,modes)??a.value?.textValue??a.value?.boolValue]));
+   const nested=contexts.map(c=>({...c,entries:switched?new Map([...c.entries].map(([k,v])=>[remapKey(k),v])):c.entries,props:remapProps(c.props),prefix:[...c.prefix,id]}));nested.push({entries,props:remapProps(props),prefix:[]});
    return render(actual,kids.get(gid(master.guid))||[],nested,world,modes,depth,rootNode,route||id);
   }
   return render(n,kids.get(id)||[],contexts,world,modes,depth,rootNode,route||id);
  }
  function render(n,children,contexts,world,modes,depth,rootNode,route){
+  const material=n.resolvedMaster??n;
+  if(map.get(gid(material.parentIndex?.guid))?.name==='_Materials/Mode Options'&&variantProperties(material).Mode==='Dark'){
+   // Native backdrop compositing is unavailable in the portable SVG scenes.
+   // A black tint alone disappears over a black Dark example. Use the source
+   // elevated surface token as a documented opaque material fallback.
+   const token=activeVariables.find(v=>v.name==='Backgrounds/Secondary - Elevated');
+   const surface=token&&resolveValue({value:{alias:{guid:token.guid}}},baseModes('dark'));
+   if(surface){n={...n,fillPaints:[{type:'SOLID',color:surface,opacity:1}]};warnings.add('dark-material-elevated-surface-fallback');}
+  }
   rendered++;const local=rootNode?identity:matrix(n.transform);const absolute=mul(world,local);const w=n.size?.x||n.derivedTextData?.layoutSize?.x||0,h=n.size?.y||n.derivedTextData?.layoutSize?.y||0;const id=gid(n.guid);const uid=key();
   hits.push({id:route,name:n.name,x:num(absolute[4]),y:num(absolute[5]),width:num(w*Math.hypot(absolute[0],absolute[1])),height:num(h*Math.hypot(absolute[2],absolute[3]))});
   let own='',inside='';
@@ -121,14 +153,31 @@ function exportNode(root,theme){
   const effects=n.effects?.filter(e=>e.visible!==false)||[];
   if(effects.some(e=>e.type==='GLASS'))warnings.add('glass-refraction-approximation');
   if(effects.some(e=>e.type==='BACKGROUND_BLUR'))warnings.add('backdrop-blur-not-baked');
-  const f=key(),effectMarkup=svgEffects(effects,w,h,f);
+  const neutralSource=n.fillPaints?.length===1&&n.fillPaints[0].blendMode==='MULTIPLY'&&['r','g','b'].every(k=>n.fillPaints[0].color?.[k]===1);
+  const f=key(),effectMarkup=svgEffects(effects,w,h,f,{neutralSource});
+  if(neutralSource&&!effectMarkup)own='';
+  if(neutralSource&&effectMarkup)own=`<!--neutral-source:start-->${own}<!--neutral-source:end-->`;
   let filter='';if(effectMarkup){defs.push(effectMarkup);filter=` filter="url(#${f})"`;warnings.add('svg-filter-platform-difference');}
-  if(n.isMask)warnings.add('mask-needs-visual-review');
-  if(n.type!=='BOOLEAN_OPERATION'&&n.type!=='VECTOR')for(const c of children)inside+=visit(c,contexts,absolute,modes,depth+1,false,`${route}/${gid(c.guid)}`);
-  if(n.frameMaskDisabled===false&&inside){const c=key();defs.push(`<clipPath id="${c}"><rect width="${num(w)}" height="${num(h)}" rx="${num(n.cornerRadius||0)}"/></clipPath>`);inside=`<g clip-path="url(#${c})">${inside}</g>`;}
-  return `<g transform="matrix(${local.map(num).join(' ')})" opacity="${num(n.opacity??1)}"${filter}>${own}${inside}</g>`;
+  if(!(shallow&&rootNode)&&n.type!=='BOOLEAN_OPERATION'&&n.type!=='VECTOR'){
+   let activeMask='',masked='';
+   const flush=()=>{inside+=activeMask?`<g mask="url(#${activeMask})">${masked}</g>`:masked;masked='';};
+   for(const c of children){
+    const resolved=overridden(c,contexts);
+    const markup=visit(c,contexts,absolute,modes,depth+1,false,`${route}/${gid(c.guid)}`);
+    if(resolved.mask&&resolved.visible!==false){flush();activeMask=key();const type=resolved.maskType==='LUMINANCE'?'luminance':'alpha';defs.push(`<mask id="${activeMask}" maskUnits="userSpaceOnUse" x="-100%" y="-100%" width="300%" height="300%" style="mask-type:${type}">${markup}</mask>`);}
+    else {
+     masked+=markup;
+     // Figma ends a sibling mask at a clipped frame/component. Include that
+     // frame in the mask, then let subsequent siblings render independently.
+     if(activeMask&&resolved.frameMaskDisabled===false&&['FRAME','SYMBOL','INSTANCE'].includes(resolved.type)){flush();activeMask='';}
+    }
+   }
+   flush();
+  }
+  if(n.frameMaskDisabled===false&&inside){const c=key();defs.push(`<clipPath id="${c}">${geo(n.fillGeometry)('white',1)}</clipPath>`);inside=`<g clip-path="url(#${c})">${inside}</g>`;}
+  return `<g data-node="${id}" transform="matrix(${local.map(num).join(' ')})" opacity="${num(n.opacity??1)}"${filter}>${own}${inside}</g>`;
  }
- const body=visit(root,[],identity,baseModes(theme),0,true);
+ const body=visit(root,[],identity,initialModes??baseModes(theme),0,true);
  const svg=`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${num(root.size?.x)}" height="${num(root.size?.y)}" viewBox="0 0 ${num(root.size?.x)} ${num(root.size?.y)}"><defs>${defs.join('')}</defs>${body}</svg>`;
  return {svg,texts,hits,assets:[...assets],warnings:[...warnings],rendered};
 }
@@ -136,14 +185,16 @@ const publicSymbols=doc.nodes.filter(n=>n.type==='SYMBOL'&&!['Internal Only Canv
 const catalogue=[];let i=0;
 for(const n of publicSymbols){
  const parent=map.get(gid(n.parentIndex?.guid));const group=parent?.isStateGroup?parent.name:n.name;
- const properties=Object.fromEntries((n.name.includes('=')?n.name.split(/,\s*/):[]).map(s=>{let at=s.indexOf('=');return [s.slice(0,at),s.slice(at+1)]}));
+ const properties=variantProperties(n);
  const entry={id:gid(n.guid),page:pageOf(n)?.name,group,name:n.name,properties,width:n.size?.x||0,height:n.size?.y||0,file:gid(n.guid).replace(':','-')+'.json'};
  const light=exportNode(n,'light'),dark=exportNode(n,'dark');
+ entry.revision=crypto.createHash('sha256').update(light.svg).update(dark.svg).digest('hex').slice(0,12);
  entry.warnings=[...new Set([...light.warnings,...dark.warnings])];entry.textCount=light.texts.length;
  json('shared/assets/components/'+entry.file,{...entry,light,dark});catalogue.push(entry);
  if(++i%100===0)console.log(`${i}/${publicSymbols.length}`);
 }
 json('shared/catalogue.json',catalogue);
+exportLayouts({doc,kids,catalogue,exportNode,baseModes,blobPath,json,matrix,mul,color,num});
 json('shared/text-styles.json',doc.nodes.filter(n=>n.styleType==='TEXT').map(n=>({id:gid(n.guid),name:n.name,font:n.fontName,fontSize:n.fontSize,lineHeight:n.lineHeight,letterSpacing:n.letterSpacing})));
 const pages=doc.nodes.filter(n=>n.type==='CANVAS'&&n.name!=='Internal Only Canvas').map(p=>({id:gid(p.guid),name:p.name,components:catalogue.filter(c=>c.page===p.name).length}));
 json('shared/pages.json',pages);

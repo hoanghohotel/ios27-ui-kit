@@ -16,6 +16,7 @@ for(const [key,g] of groups){let name='Design'+pascal(g.page)+' '+pascal(g.group
 }
 fs.writeFileSync(path.join(root,'packages/react/src/generated.tsx'),react);
 fs.copyFileSync(path.join(root,'shared/catalogue.json'),path.join(root,'packages/react/src/catalogue.json'));
+fs.copyFileSync(path.join(root,'shared/layouts.json'),path.join(root,'packages/react/src/layouts.json'));
 fs.writeFileSync(path.join(root,'packages/flutter/lib/src/generated.dart'),dart);
 fs.mkdirSync(path.join(root,'packages/flutter/assets'),{recursive:true});
 for(const f of ['catalogue.json','tokens.json'])fs.copyFileSync(path.join(root,'shared',f),path.join(root,'packages/flutter/assets',f));
