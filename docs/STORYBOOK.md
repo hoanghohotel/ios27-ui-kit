@@ -29,7 +29,7 @@ Storybook dùng React + Vite để kiểm tra thư viện React độc lập v�
 npx chromatic --storybook-build-dir=storybook-static --config-file=chromatic.ci.json
 ```
 
-Mặc định chụp 11 story: 5 control native và 3 Product Bezels × 2 theme. Các story catalogue còn lại có `chromatic.disableSnapshot: true`, vẫn duyệt bình thường trong Storybook. Mở rộng danh sách `capture` trong `scripts/generate-stories.mjs` để bật thêm mẫu; chạy lại build sau khi chỉnh.
+Mặc định chụp toàn bộ 3.027 story: 5 control native và 1.511 component × 2 theme. Các story catalogue đặt `chromatic.disableSnapshot: false` và dùng kích thước gốc, không thu nhỏ về 420px. Mỗi lượt chạy đầy đủ sử dụng hạn mức snapshot tương ứng của tài khoản. Baseline cũ chỉ có 11 story nên lần đầu sau thay đổi này sẽ có nhiều story mới, không có nghĩa chúng đã được xác minh với Figma.
 
 Lượt đầu tạo baseline, cần duyệt hình ảnh trước khi xem đó là bản chuẩn. `exitZeroOnChanges` cho phép build hoàn tất khi có khác biệt hình ảnh; lỗi build/runtime vẫn phải sửa. Không bật tự động chấp nhận thay đổi.
 

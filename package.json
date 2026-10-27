@@ -24,6 +24,8 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "chromatic": "^18.13.3",
+    "openfig-core": "^0.4.1",
+    "sharp": "^0.35.5",
     "storybook": "^10.6.4",
     "typescript": "^5.9.3",
     "vite": "^8.3.5"

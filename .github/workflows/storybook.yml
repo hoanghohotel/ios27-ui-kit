@@ -20,6 +20,8 @@ jobs:
           node-version: '24'
           cache: npm
       - run: npm ci
+      - name: Validate catalogue and effects
+        run: node scripts/verify-assets.mjs && node scripts/test-product-bezels.mjs && node scripts/test-svg-effects.mjs
       - name: Build Storybook
         run: npm run build-storybook
       - name: Upload Storybook build

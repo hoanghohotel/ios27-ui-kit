@@ -1,0 +1,8 @@
+{
+  "scenes": 3022,
+  "passed": 3022,
+  "failures": [],
+  "renderer": "sharp/librsvg",
+  "thumbnailTarget": 160,
+  "note": "Thumbnail render validity only; thin separators retain at least one pixel. Not pixel parity with Figma or browser/Flutter equivalence."
+}

@@ -8,9 +8,8 @@ const target=path.join(root,'stories/generated');fs.mkdirSync(target,{recursive:
 for(const [page,entries] of groups){
   let source=`import React from 'react';\nimport {expect,waitFor} from 'storybook/test';\nimport {KitComponent} from '../../packages/react/src/KitComponent';\nexport default {title:${JSON.stringify('Design/'+page)},parameters:{chromatic:{disableSnapshot:true}},play:async({canvasElement})=>{await waitFor(()=>expect(canvasElement.querySelector('.kit-component')).toHaveAttribute('aria-busy','false'),{timeout:15000});const images=Array.from(canvasElement.querySelectorAll('svg image'));await Promise.all(images.map(el=>new Promise<void>((resolve,reject)=>{const img=new Image();img.onload=()=>resolve();img.onerror=()=>reject(new Error('Image failed to load'));img.src=el.getAttribute('href')!;})));}};\n`;
   for(const entry of entries){
-    // Full catalogue is browsable; only representative bezels are cloud snapshots by default.
-    const capture=['6316:14139','487:11227','12887:20889'].includes(entry.id);
-    for(const theme of ['light','dark'])source+=`export const V${entry.id.replace(':','_')}${theme}={name:${JSON.stringify(entry.group+' / '+entry.name+' / '+theme)},globals:{theme:${JSON.stringify(theme)}},parameters:{chromatic:{disableSnapshot:${!capture}}},render:()=> <KitComponent id=${JSON.stringify(entry.id)} width={${Math.min(entry.width,420)}}/>};\n`;
+    // Capture every variant at its design size; scaling to 420px hid small defects.
+    for(const theme of ['light','dark'])source+=`export const V${entry.id.replace(':','_')}${theme}={name:${JSON.stringify(entry.group+' / '+entry.name+' / '+theme)},globals:{theme:${JSON.stringify(theme)}},parameters:{chromatic:{disableSnapshot:false,viewports:[${Math.max(800,Math.ceil(entry.width+64))}]}},render:()=> <KitComponent id=${JSON.stringify(entry.id)}/>};\n`;
   }
   fs.writeFileSync(path.join(target,page.replace(/[^a-z0-9]+/gi,'-')+'.stories.tsx'),source);
 }
