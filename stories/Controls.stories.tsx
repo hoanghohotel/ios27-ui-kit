@@ -29,7 +29,9 @@ export const Interaction:Story={play:async({canvasElement})=>{
   await userEvent.clear(canvas.getByRole('textbox',{name:'Display name'}));
   await userEvent.type(canvas.getByRole('textbox',{name:'Display name'}),'Taylor');
   await expect(canvas.getByRole('textbox',{name:'Display name'})).toHaveValue('Taylor');
-  await expect(canvas.getByRole('textbox',{name:/^Email/})).toHaveAttribute('aria-invalid','true');
+  const email=canvas.getByRole('textbox',{name:'Email'});
+  await expect(email).toHaveAttribute('aria-invalid','true');
+  await expect(email).toHaveAccessibleDescription('Enter a valid email address.');
 }};
 function DialogExample(){const [open,setOpen]=useState(true);return <><Button onClick={()=>setOpen(true)}>Open dialog</Button><Dialog open={open} onClose={()=>setOpen(false)} title="Save changes?" actions={<Button onClick={()=>setOpen(false)}>Save</Button>}>Review your changes before saving.</Dialog></>;}
 export const Alert:Story={render:()=> <DialogExample/>};
