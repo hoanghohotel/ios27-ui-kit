@@ -50,6 +50,8 @@ Chạy `npm run prepare:assets` để tạo tài nguyên cho showcase. Với d�
 
 `shared/component-exports.json` liệt kê 308 tên export `Design…`, cùng các biến thể và ID. Có thể chọn bằng `id`, hoặc `page`, `group`, `variant`. Hãy chỉ định đầy đủ thuộc tính cần thiết; nếu thiếu, thư viện chọn biến thể khớp đầu tiên.
 
+Product Bezels dùng kích thước toàn bộ máy (gồm viền và nút bên hông), không chỉ kích thước màn hình. Ví dụ iPhone 17 Pro là 450×920; `screenRect` trong dữ liệu JSON giữ vùng màn hình gốc `{x:24,y:23,width:402,height:874}`. `width`/`scale` áp dụng cho cả khung máy. Chạy `node scripts/test-product-bezels.mjs` để kiểm tra không cắt viền ở 36 biến thể.
+
 `texts` nhận ID, tên layer (ví dụ `Label`) hoặc khóa `t0`. ID layer giúp phân biệt khi nhiều layer cùng tên. `actions` nhận ID/tên hitbox; `onPress` áp dụng cả component. Dữ liệu layer nằm trong `shared/assets/components/*.json`. Chữ thay thế nằm trong khung gốc nên nội dung dài có thể bị cắt.
 
 ## Dùng trong Flutter

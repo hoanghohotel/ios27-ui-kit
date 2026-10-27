@@ -1,5 +1,9 @@
 # Kết quả kiểm tra — 2026-10-27
 
+## Sửa Product Bezels
+
+Đã sửa canvas cho 36 biến thể / 72 appearance để giữ toàn bộ phần ảnh tràn ngoài frame màn hình của Figma. Ảnh iPhone 17 Pro Deep Blue tải từ Figma MCP và ảnh cục bộ có SHA-256 giống nhau. Đã đối chiếu ảnh tham chiếu Figma của mẫu này; iPad và máy gập được kiểm tra bằng dữ liệu layer và ảnh gốc trong file `.fig` do giới hạn lượt gọi MCP. Không vẽ lại hoặc thay thế ảnh bezel. Kiểm tra tự động xác nhận toàn bộ layer nằm trong canvas mới và vùng màn hình nguồn được giữ ở `screenRect`.
+
 ## Đã kiểm tra
 
 - React library: TypeScript build thành công.

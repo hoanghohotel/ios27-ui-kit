@@ -1,5 +1,7 @@
 import fs from 'node:fs';import path from 'node:path';
+import {fixProductBezels} from './fix-product-bezels.mjs';
 const root=path.resolve(import.meta.dirname,'..');
+fixProductBezels(root);
 const cat=JSON.parse(fs.readFileSync(path.join(root,'shared/catalogue.json'),'utf8'));
 const groups=new Map();for(const c of cat){const k=c.page+'/'+c.group;if(!groups.has(k))groups.set(k,{page:c.page,group:c.group,variants:[]});groups.get(k).variants.push(c);}
 const pascal=s=>s.replace(/[^a-zA-Z0-9]+/g,' ').trim().split(/\s+/).map(w=>w[0].toUpperCase()+w.slice(1)).join('');
