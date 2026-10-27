@@ -1,0 +1,1 @@
+{"name":"ios27-showcase","private":true,"scripts":{"dev":"next dev --hostname 127.0.0.1 --port 3127","build":"next build","start":"next start --hostname 127.0.0.1 --port 3127"},"dependencies":{"@local/ios27-react":"0.1.0","next":"^16.0.0","react":"^19.2.0","react-dom":"^19.2.0"}}

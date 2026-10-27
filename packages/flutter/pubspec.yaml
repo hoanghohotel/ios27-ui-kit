@@ -1,0 +1,21 @@
+name: ios27_kit
+description: Local React and Flutter companion library extracted from the supplied iOS 27 Figma kit.
+version: 0.1.0
+publish_to: none
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+  flutter: '>=3.24.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_svg: ^2.3.0
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+flutter:
+  assets:
+    - assets/catalogue.json
+    - assets/tokens.json
+    - assets/images.json
+    - assets/components/
+    - assets/images/

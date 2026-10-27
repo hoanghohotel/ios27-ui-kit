@@ -1,0 +1,14 @@
+{
+  "name": "ios27-ui-kit-workspace",
+  "private": true,
+  "workspaces": ["packages/react", "apps/showcase"],
+  "scripts": {
+    "setup": "node scripts/generate-bindings.mjs && npm run prepare:assets && npm run build:library",
+    "prepare:assets": "node scripts/prepare-assets.mjs",
+    "build:library": "npm run build -w @local/ios27-react",
+    "build": "npm run prepare:assets && npm run build:library && npm run build -w ios27-showcase",
+    "dev": "npm run prepare:assets && npm run dev -w ios27-showcase",
+    "typecheck": "tsc --noEmit -p packages/react/tsconfig.json && tsc --noEmit -p apps/showcase/tsconfig.json"
+  },
+  "devDependencies": {"typescript": "^5.9.3", "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/node": "^24.0.0"}
+}
