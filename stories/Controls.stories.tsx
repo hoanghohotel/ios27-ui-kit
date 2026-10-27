@@ -9,6 +9,7 @@ function Controls() {
     <div style={{display:'flex',gap:8,flexWrap:'wrap'}}><Button>Save</Button><Button appearance="tinted">Cancel</Button><Button disabled>Disabled</Button><Button destructive>Delete</Button></div>
     <Toggle label="Notifications" checked={on} onChange={setOn}/>
     <TextField label="Display name" defaultValue="Alex"/>
+    <TextField label="Email" type="email" defaultValue="alex@" error="Enter a valid email address."/>
     <Stepper label="Quantity" value={count} onChange={setCount}/>
     <Slider label="Volume" value={volume} onChange={setVolume}/>
     <Menu label="More actions" items={[{label:'Reset quantity',onSelect:()=>setCount(3)},{label:'Delete',destructive:true,onSelect:()=>{}}]}/>
@@ -27,7 +28,8 @@ export const Interaction:Story={play:async({canvasElement})=>{
   await expect(canvas.getByText('4')).toBeVisible();
   await userEvent.clear(canvas.getByRole('textbox',{name:'Display name'}));
   await userEvent.type(canvas.getByRole('textbox',{name:'Display name'}),'Taylor');
-  await expect(canvas.getByRole('textbox')).toHaveValue('Taylor');
+  await expect(canvas.getByRole('textbox',{name:'Display name'})).toHaveValue('Taylor');
+  await expect(canvas.getByRole('textbox',{name:'Email'})).toHaveAttribute('aria-invalid','true');
 }};
 function DialogExample(){const [open,setOpen]=useState(true);return <><Button onClick={()=>setOpen(true)}>Open dialog</Button><Dialog open={open} onClose={()=>setOpen(false)} title="Save changes?" actions={<Button onClick={()=>setOpen(false)}>Save</Button>}>Review your changes before saving.</Dialog></>;}
 export const Alert:Story={render:()=> <DialogExample/>};
